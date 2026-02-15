@@ -11,7 +11,7 @@ load_dotenv()
 
 # Configure DSPy
 api_key = os.getenv("GROQ_API_KEY")
-llm = dspy.GROQ(model="llama-3.1-8b-instant", api_key=api_key)
+llm = dspy.LM("groq/llama-3.1-8b-instant", api_key=api_key)
 dspy.configure(lm=llm)
 
 
