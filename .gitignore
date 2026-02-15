@@ -15,8 +15,10 @@ ENV/
 .venv
 
 # DSPy checkpoints
-*.json
 checkpoints/
+
+# Generated reports
+verification_report.txt
 
 # IDE
 .vscode/
