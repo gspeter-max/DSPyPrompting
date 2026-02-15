@@ -3,7 +3,7 @@
 import os
 import dspy
 from dotenv import load_dotenv
-from qa_module import QAModule, answer_exact_match_metric
+from qa_module import QAModule, context_adherence_metric
 from dataset import trainset
 
 # Load environment variables
@@ -33,9 +33,9 @@ qa_module = QAModule()
 
 # Configure BootstrapFewShot optimizer
 optimizer = dspy.BootstrapFewShot(
-    metric=answer_exact_match_metric,
-    max_labeled_demos=3,
-    max_bootstrapped_demos=3,
+    metric=context_adherence_metric,
+    max_labeled_demos=4,
+    max_bootstrapped_demos=4,
     max_rounds=1,
     max_errors=10
 )

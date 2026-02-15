@@ -1,6 +1,6 @@
 """Training dataset for DSPy Context-Based QA system.
 
-Contains 6 labeled examples for Python programming Q&A.
+Contains 6 positive examples (answer in context) and 3 negative examples (answer not in context).
 """
 
 import dspy
@@ -59,5 +59,31 @@ The syntax is: (expression for item in iterable if condition)
 Unlike list comprehensions, generator expressions don't create the entire list in memory.""",
         question="Do generator expressions create the entire list in memory?",
         answer="No"
+    ).with_inputs("context", "question"),
+
+    # NEGATIVE EXAMPLES (teach model to refuse when answer not in context)
+
+    # 7. Negative: Answer not in context (tuples vs lists)
+    dspy.Example(
+        context="""Python lists are mutable sequences that can hold mixed types.
+You can add, remove, or modify elements in a list after creation.""",
+        question="What is a tuple?",
+        answer="This information is not provided in the context"
+    ).with_inputs("context", "question"),
+
+    # 8. Negative: Answer not in context (lambda functions)
+    dspy.Example(
+        context="""Python functions are defined using the def keyword.
+Functions can take parameters and return values.""",
+        question="What is a lambda function?",
+        answer="This information is not provided in the context"
+    ).with_inputs("context", "question"),
+
+    # 9. Negative: Answer not in context (decorators)
+    dspy.Example(
+        context="""Python supports object-oriented programming with classes and objects.
+Classes can have attributes and methods.""",
+        question="How do you create a decorator?",
+        answer="This information is not provided in the context"
     ).with_inputs("context", "question"),
 ]
