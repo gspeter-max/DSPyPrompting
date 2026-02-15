@@ -85,9 +85,16 @@ def verify_training():
     print(f"  ✅ Model loaded from {model_path}")
     print()
 
-    # Model loaded successfully
-    print(f"  ✅ Model loaded and ready")
+    # Show demonstrations
+    demos = qa_model.generate_answer.predict.demos
+    print(f"  Demonstrations used by optimizer: {len(demos)}")
     print()
+
+    for i, demo in enumerate(demos[:3], 1):  # Show first 3
+        print(f"  Demo {i}:")
+        print(f"    Question: {demo['question']}")
+        print(f"    Answer: {demo['answer']}")
+        print()
 
     return True
 
@@ -208,7 +215,7 @@ def main():
         verify_training()
         qa_model = QAModule()
         qa_model.load(model_path)
-        results['num_demos'] = "N/A"  # Not accessible in DSPy 3.x
+        results['num_demos'] = len(qa_model.generate_answer.predict.demos)
     else:
         print("\n  ❌ Cannot run demo without trained model")
         return

@@ -60,4 +60,17 @@ model_path = "trained_qa_model.json"
 trained_qa.save(model_path)
 print(f"✅ Trained model saved to: {model_path}")
 print()
+
+# Print demonstrations used
+demos = trained_qa.generate_answer.predict.demos
+print(f"Demonstrations selected by optimizer: {len(demos)}")
+print()
+
+for i, demo in enumerate(demos, 1):
+    print(f"  Demo {i}:")
+    print(f"    Context: {demo['context'][:50]}...")
+    print(f"    Question: {demo['question']}")
+    print(f"    Answer: {demo['answer']}")
+    print()
+
 print("═══════════════════════════════════════════════════════════════")
