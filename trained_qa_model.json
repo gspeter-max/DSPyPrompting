@@ -1,0 +1,56 @@
+{
+  "generate_answer.predict": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "augmented": true,
+        "context": "List comprehensions in Python provide a concise way to create lists.\nThe syntax is: [expression for item in iterable if condition]\nFor example: [x**2 for x in range(10) if x % 2 == 0] creates squares of even numbers from 0 to 9.",
+        "question": "What is the syntax for a list comprehension in Python?",
+        "reasoning": "The context directly states that the syntax for list comprehensions in Python is: [expression for item in iterable if condition]. This syntax can also be broken down into simpler components where expression can be any operation (e.g. x**2), item can be any element of the list (e.g., x), iterable can be any list or data that Python can iterate over (e.g. range(10)),  and condition is an optional test that must be passed in order to include the value in the list.",
+        "answer": "[expression for item in iterable if condition]"
+      },
+      {
+        "augmented": true,
+        "context": "*args and **kwargs allow you to pass a variable number of arguments to a function.\n*args collects positional arguments into a tuple.\n**kwargs collects keyword arguments into a dictionary.",
+        "question": "What does **kwargs collect keyword arguments into?",
+        "reasoning": "The context states that **kwargs collects keyword arguments and since the task is to identify what it specifically collects keyword arguments into, the reasoning would be that **kwargs typically collects keyword arguments into a dictionary in Python.",
+        "answer": "a dictionary"
+      },
+      {
+        "context": "Generator expressions are similar to list comprehensions but use parentheses instead of brackets.\nThey produce items one at a time and are memory efficient.\nThe syntax is: (expression for item in iterable if condition)\nUnlike list comprehensions, generator expressions don't create the entire list in memory.",
+        "question": "Do generator expressions create the entire list in memory?",
+        "answer": "No"
+      }
+    ],
+    "signature": {
+      "instructions": "Answer questions about Python programming based on context.",
+      "fields": [
+        {
+          "prefix": "Context:",
+          "description": "Documentation or explanation about Python"
+        },
+        {
+          "prefix": "Question:",
+          "description": "Question about the context"
+        },
+        {
+          "prefix": "Reasoning: Let's think step by step in order to",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Answer:",
+          "description": "Answer based on the given context"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.14",
+      "dspy": "3.1.3",
+      "cloudpickle": "3.1"
+    }
+  }
+}
