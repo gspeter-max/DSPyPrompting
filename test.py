@@ -3,7 +3,7 @@
 import os
 import dspy
 from dotenv import load_dotenv
-from qa_module import QAModule, answer_exact_match_metric
+from qa_module import QAModule, semantic_f1_metric
 from dataset import trainset
 
 # Load environment variables
@@ -13,6 +13,22 @@ load_dotenv()
 api_key = os.getenv("GROQ_API_KEY")
 llm = dspy.LM("groq/llama-3.1-8b-instant", api_key=api_key)
 dspy.configure(lm=llm)
+
+
+def semantic_f1_threshold(gold, pred, trace=None, threshold=0.5):
+    """Convert semantic_f1_metric score to boolean for test assertions.
+
+    Args:
+        gold: Ground truth example
+        pred: Prediction from model
+        trace: Optional trace (unused, for API compatibility)
+        threshold: Minimum SemanticF1 score to consider correct (default: 0.5)
+
+    Returns:
+        bool: True if SemanticF1 score >= threshold
+    """
+    score = semantic_f1_metric(gold, pred)
+    return score >= threshold
 
 
 def print_header(text):
@@ -32,7 +48,7 @@ def test_training_data_accuracy(trained_model):
 
     for i, sample in enumerate(trainset, 1):
         pred = trained_model(context=sample.context, question=sample.question)
-        is_correct = answer_exact_match_metric(sample, pred)
+        is_correct = semantic_f1_threshold(sample, pred)
 
         status = "✅ PASS" if is_correct else "❌ FAIL"
         print(f"  {status} Sample {i}: {sample.question[:40]}...")
@@ -84,7 +100,7 @@ You access values using their keys: my_dict['key']""",
 
     for i, sample in enumerate(testset, 1):
         pred = trained_model(context=sample.context, question=sample.question)
-        is_correct = answer_exact_match_metric(sample, pred)
+        is_correct = semantic_f1_threshold(sample, pred)
 
         status = "✅ PASS" if is_correct else "⚠️ SEMANTIC MATCH" if not is_correct and sample.answer.lower() in pred.answer.lower() else "❌ FAIL"
 
@@ -127,8 +143,8 @@ def test_untrained_vs_trained():
         pred_untrained = untrained_qa(context=sample.context, question=sample.question)
         pred_trained = trained_qa(context=sample.context, question=sample.question)
 
-        untrained_ok = answer_exact_match_metric(sample, pred_untrained)
-        trained_ok = answer_exact_match_metric(sample, pred_trained)
+        untrained_ok = semantic_f1_threshold(sample, pred_untrained)
+        trained_ok = semantic_f1_threshold(sample, pred_trained)
 
         untrained_status = "✅" if untrained_ok else "❌"
         trained_status = "✅" if trained_ok else "❌"

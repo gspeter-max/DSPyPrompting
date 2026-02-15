@@ -1,9 +1,10 @@
 """DSPy QA module definition.
 
-Contains the signature, module, and metric for the QA system.
+Contains the signature, module, and SemanticF1 metric for the QA system.
 """
 
 import dspy
+from dspy.evaluate import SemanticF1
 
 
 class GenerateAnswer(dspy.Signature):
@@ -33,8 +34,11 @@ class QAModule(dspy.Module):
         return self.generate_answer(context=context, question=question)
 
 
-def answer_exact_match_metric(gold, pred, trace=None):
-    """Metric function for exact answer matching.
+def semantic_f1_metric(gold, pred, trace=None):
+    """Semantic F1 metric using DSPy's SemanticF1 for QA evaluation.
+
+    This metric wraps DSPy's SemanticF1 to work with our QA module's field names.
+    SemanticF1 expects .response field but our module uses .answer field.
 
     Args:
         gold: Ground truth example with expected answer
@@ -42,56 +46,18 @@ def answer_exact_match_metric(gold, pred, trace=None):
         trace: Optional trace of the prediction process
 
     Returns:
-        bool: True if answers match (case-insensitive)
+        float: Semantic F1 score (0.0 to 1.0)
     """
-    return pred.answer.lower().strip() == gold.answer.lower().strip()
+    # SemanticF1 expects examples with .response field, not .answer
+    # Create wrapped examples with correct field names
+    wrapped_gold = dspy.Example(
+        question=gold.question,
+        response=gold.answer
+    )
 
+    wrapped_pred = dspy.Example(
+        response=pred.answer
+    )
 
-def context_adherence_metric(gold, pred, trace=None):
-    """Improved metric that validates context adherence.
-
-    This metric checks:
-    1. If answer should be "not in context", verify refusal
-    2. If answer should be in context, check for semantic match
-    3. More lenient with formatting than exact match
-
-    Args:
-        gold: Ground truth example with expected answer
-        pred: Prediction with predicted answer
-        trace: Optional trace of the prediction process
-
-    Returns:
-        bool: True if answer adheres to context guidelines
-    """
-    pred_answer = pred.answer.lower().strip()
-    gold_answer = gold.answer.lower().strip()
-
-    # Check for "not in context" refusal
-    if "not provided in context" in gold_answer or "not mentioned" in gold_answer:
-        # Model should refuse answering - check for any variation
-        refusal_phrases = ["not provided in context", "not mentioned", "not in context",
-                          "cannot answer", "don't know", "information not"]
-        return any(phrase in pred_answer for phrase in refusal_phrases)
-
-    # For normal answers, check if gold answer is contained in prediction
-    # This handles cases like "the @ symbol" matching "@"
-    if gold_answer in pred_answer:
-        return True
-
-    # Also check if prediction is contained in gold (for shorter answers)
-    if pred_answer in gold_answer:
-        return True
-
-    # Check for key semantic equivalence
-    # Remove common words and compare
-    pred_words = set(pred_answer.split())
-    gold_words = set(gold_answer.split())
-
-    # If 80% of gold words appear in prediction, consider it a match
-    if gold_words:
-        overlap = len(pred_words & gold_words) / len(gold_words)
-        if overlap >= 0.8:
-            return True
-
-    # Exact match as fallback
-    return pred_answer == gold_answer
+    metric = SemanticF1(decompositional=True)
+    return metric(wrapped_gold, wrapped_pred)
