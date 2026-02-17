@@ -91,6 +91,63 @@ def semantic_f1_metric(gold, pred, trace=None):
         return _fallback_metric(gold, pred)
 
 
+def hallucination_aware_metric(gold, pred, trace=None):
+    """Metric that heavily penalizes hallucination on negative examples.
+
+    For negative examples (where gold expects refusal):
+    - Returns 1.0 if model correctly refuses
+    - Returns 0.0 if model hallucinates (provides answer instead of refusing)
+    - Prints debug output to identify hallucination during training
+
+    For positive examples:
+    - Uses existing semantic_f1_metric for normal evaluation
+
+    Args:
+        gold: Ground truth example
+        pred: Prediction from model
+        trace: Optional trace
+
+    Returns:
+        float: Score (0.0 to 1.0)
+    """
+    gold_lower = gold.answer.lower().strip()
+
+    # Check if this is a negative example (expects refusal)
+    is_negative = (
+        "not provided" in gold_lower or
+        "cannot answer" in gold_lower or
+        "not mentioned" in gold_lower
+    )
+
+    if is_negative:
+        # For negative examples, check if model refused
+        pred_lower = pred.answer.lower().strip()
+        refusal_indicators = [
+            "not provided in context",
+            "not mentioned in context",
+            "information is not provided",
+            "not in the context",
+            "cannot answer",
+            "don't know"
+        ]
+
+        refused = any(indicator in pred_lower for indicator in refusal_indicators)
+
+        if refused:
+            # Correctly refused
+            return 1.0
+        else:
+            # HALLUCINATION - Model answered when it should have refused
+            print(f"🔴 HALLUCINATION DETECTED:")
+            print(f"   Question: {gold.question[:60]}...")
+            print(f"   Expected: Refusal (not provided in context)")
+            print(f"   Got: {pred.answer[:80]}...")
+            return 0.0  # Zero score - severe penalty
+
+    # For positive examples, use normal semantic evaluation
+    return semantic_f1_metric(gold, pred)
+
+
 def _fallback_metric(gold, pred, trace=None):
     """Fallback metric when SemanticF1 fails.
 
