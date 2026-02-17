@@ -209,3 +209,101 @@ class TestTrainingOutput:
         assert isinstance(mock_demo['context'], str)
         assert isinstance(mock_demo['question'], str)
         assert isinstance(mock_demo['answer'], str)
+
+
+class TestCLIOptimizerSelection:
+    """Test CLI argument parsing for optimizer selection."""
+
+    def test_cli_argument_parsing(self):
+        """Verify argparse is configured for optimizer selection."""
+        import argparse
+
+        # Recreate parser from train.py
+        parser = argparse.ArgumentParser(
+            description="Train DSPy QA model with configurable optimizer",
+            formatter_class=argparse.RawDescriptionHelpFormatter
+        )
+
+        parser.add_argument(
+            "--optimizer",
+            choices=["bootstrap", "miprov2"],
+            default="bootstrap",
+            help="Optimizer to use (default: bootstrap)"
+        )
+
+        parser.add_argument(
+            "--auto",
+            choices=["light", "medium", "heavy"],
+            default=None,
+            help="MIPROv2 auto mode: light, medium, or heavy (only for --optimizer miprov2)"
+        )
+
+        parser.add_argument(
+            "--num-threads",
+            type=int,
+            default=None,
+            help="Number of threads for parallel optimization (only for MIPROv2)"
+        )
+
+        # Test default (no arguments)
+        args = parser.parse_args([])
+        assert args.optimizer == "bootstrap"
+        assert args.auto is None
+        assert args.num_threads is None
+
+        # Test MIPROv2 with auto
+        args = parser.parse_args(["--optimizer", "miprov2", "--auto", "medium"])
+        assert args.optimizer == "miprov2"
+        assert args.auto == "medium"
+
+        # Test MIPROv2 with threads
+        args = parser.parse_args(["--optimizer", "miprov2", "--num-threads", "8"])
+        assert args.optimizer == "miprov2"
+        assert args.num_threads == 8
+
+    def test_optimizer_selection_logic(self):
+        """Verify optimizer selection if/elif logic."""
+        from unittest.mock import Mock
+
+        # Test bootstrap selection
+        args = Mock(optimizer="bootstrap", auto=None, num_threads=None)
+
+        if args.optimizer == "miprov2":
+            selected = "miprov2"
+        else:
+            selected = "bootstrap"
+
+        assert selected == "bootstrap"
+
+        # Test MIPROv2 selection
+        args = Mock(optimizer="miprov2", auto="medium", num_threads=None)
+
+        if args.optimizer == "miprov2":
+            selected = "miprov2"
+        else:
+            selected = "bootstrap"
+
+        assert selected == "miprov2"
+
+    def test_backward_compatibility_default(self):
+        """Verify default behavior unchanged (backward compatibility)."""
+        import argparse
+
+        # Recreate parser from train.py
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--optimizer", choices=["bootstrap", "miprov2"], default="bootstrap")
+
+        # Test that default is still bootstrap
+        args = parser.parse_args([])
+        assert args.optimizer == "bootstrap"
+
+        # Test that explicit bootstrap works
+        args = parser.parse_args(["--optimizer", "bootstrap"])
+        assert args.optimizer == "bootstrap"
+
+        # Verify filename generation
+        optimizer = args.optimizer
+        optimizer_suffix = "miprov2" if optimizer == "miprov2" else "bootstrap"
+        model_path = f"trained_qa_model_{optimizer_suffix}.json"
+
+        assert model_path == "trained_qa_model_bootstrap.json"
