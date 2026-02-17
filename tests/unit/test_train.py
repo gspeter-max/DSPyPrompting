@@ -11,7 +11,7 @@ class TestTrainingConfiguration:
 
     @patch('train.dspy.LM')
     @patch('train.dspy.configure')
-    @patch.dict(os.environ, {'GROQ_API_KEY': 'test-api-key-12345'})
+    @patch.dict(os.environ, {'GEMINI_API_KEY': 'test-api-key-12345'})
     def test_dspy_lm_configuration(self, mock_configure, mock_lm):
         """Verify DSPy LM is configured correctly."""
         # Import after setting env var
@@ -24,19 +24,19 @@ class TestTrainingConfiguration:
         # Verify LM was called with correct model name
         mock_lm.assert_called_once()
         call_args = str(mock_lm.call_args)
-        assert 'llama-3.1-8b-instant' in call_args or 'groq' in call_args.lower()
+        assert 'gemini-flash-1.5' in call_args or 'google' in call_args.lower()
 
-    @patch.dict(os.environ, {'GROQ_API_KEY': 'test-api-key-12345'})
+    @patch.dict(os.environ, {'GEMINI_API_KEY': 'test-api-key-12345'})
     def test_api_key_from_environment(self):
         """Verify API key is loaded from environment."""
         # Set env var before import
-        os.environ['GROQ_API_KEY'] = 'test-api-key-12345'
+        os.environ['GEMINI_API_KEY'] = 'test-api-key-12345'
 
         # Import should not raise ValueError
         try:
             from dotenv import load_dotenv
             load_dotenv()
-            api_key = os.getenv("GROQ_API_KEY")
+            api_key = os.getenv("GEMINI_API_KEY")
             assert api_key == 'test-api-key-12345'
         except ValueError:
             pytest.fail("Should not raise ValueError when API key is set")
@@ -45,9 +45,9 @@ class TestTrainingConfiguration:
         """Verify missing API key raises ValueError."""
         # Remove env var
         with patch.dict(os.environ, {}, clear=True):
-            with patch.dict(os.environ, {'GROQ_API_KEY': ''}, clear=False):
+            with patch.dict(os.environ, {'GEMINI_API_KEY': ''}, clear=False):
                 # Try to get API key
-                api_key = os.getenv("GROQ_API_KEY")
+                api_key = os.getenv("GEMINI_API_KEY")
                 # Empty string should be treated as missing
                 assert api_key in (None, '')
 
@@ -63,7 +63,7 @@ class TestOptimizerConfiguration:
         mock_bootstrap.return_value = mock_optimizer
 
         # Import to trigger optimizer creation
-        with patch.dict(os.environ, {'GROQ_API_KEY': 'test-key'}):
+        with patch.dict(os.environ, {'GEMINI_API_KEY': 'test-key'}):
             # We can't actually run train.py, but we can test the config values
             from qa_module import hallucination_aware_metric
 
@@ -136,7 +136,7 @@ class TestDatasetLoading:
         assert isinstance(trainset, list)
         assert len(trainset) == 15
 
-    @patch.dict(os.environ, {'GROQ_API_KEY': 'test-key'})
+    @patch.dict(os.environ, {'GEMINI_API_KEY': 'test-key'})
     def test_training_samples_count(self):
         """Verify training shows correct sample count."""
         from dataset import trainset
@@ -154,24 +154,24 @@ class TestDatasetLoading:
 class TestEnvironmentVariables:
     """Test environment variable handling."""
 
-    def test_groq_api_key_required(self):
-        """Verify error when GROQ_API_KEY is missing."""
+    def test_gemini_api_key_required(self):
+        """Verify error when GEMINI_API_KEY is missing."""
         # Test with empty environment
         with patch.dict(os.environ, {}, clear=True):
-            api_key = os.getenv("GROQ_API_KEY")
+            api_key = os.getenv("GEMINI_API_KEY")
             assert api_key is None
 
     def test_empty_api_key_raises_error(self):
         """Verify empty API key is treated as missing."""
-        with patch.dict(os.environ, {'GROQ_API_KEY': ''}):
-            api_key = os.getenv("GROQ_API_KEY")
+        with patch.dict(os.environ, {'GEMINI_API_KEY': ''}):
+            api_key = os.getenv("GEMINI_API_KEY")
             # Empty string is falsy but not None
             assert api_key == ''
 
-    @patch.dict(os.environ, {'GROQ_API_KEY': 'valid-key-12345'})
+    @patch.dict(os.environ, {'GEMINI_API_KEY': 'valid-key-12345'})
     def test_valid_api_key_accepted(self):
         """Verify valid API key is accepted."""
-        api_key = os.getenv("GROQ_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY")
         assert api_key == 'valid-key-12345'
         assert len(api_key) > 0
 

@@ -10,14 +10,14 @@ from dataset import trainset
 # Load environment variables
 load_dotenv()
 
-# Get Groq API key
-api_key = os.getenv("GROQ_API_KEY")
+# Get Gemini API key
+api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
-    raise ValueError("GROQ_API_KEY not found in environment variables")
+    raise ValueError("GEMINI_API_KEY not found in environment variables")
 
-# Configure DSPy with Groq Llama model (DSPy 3.x format)
+# Configure DSPy with Gemini 1.5 Flash (DSPy 3.x format)
 llm = dspy.LM(
-    "groq/llama-3.1-8b-instant",
+    "google/gemini-flash-1.5",
     api_key=api_key
 )
 dspy.configure(lm=llm)
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         auto_mode = args.auto or "light"
         print(f"           Auto Mode: {auto_mode}")
     print("═══════════════════════════════════════════════════════════════")
-    print(f"Model: llama-3.1-8b-instant")
+    print(f"Model: gemini-flash-1.5")
     print(f"Training samples: {len(trainset)}")
     positive_count = sum(1 for s in trainset if "not provided" not in s.answer)
     negative_count = sum(1 for s in trainset if "not provided" in s.answer)
