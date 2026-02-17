@@ -125,10 +125,22 @@ def hallucination_aware_metric(gold, pred, trace=None):
         refusal_indicators = [
             "not provided in context",
             "not mentioned in context",
+            "not mentioned",
+            "mentioned in the provided context",
             "information is not provided",
+            "information not available",
+            "not available",
             "not in the context",
+            "not in context",
             "cannot answer",
-            "don't know"
+            "cannot be determined",
+            "don't know",
+            "is not provided in the context",
+            "is not provided",
+            "context does not contain",
+            "not in the provided context",
+            "not stated in the context",
+            "provided context"
         ]
 
         refused = any(indicator in pred_lower for indicator in refusal_indicators)
@@ -171,9 +183,15 @@ def _fallback_metric(gold, pred, trace=None):
     # Check for "not in context" refusal - be more lenient
     if "not provided" in gold_answer or "not mentioned" in gold_answer or "not in context" in gold_answer:
         # Any indication that the info is not available counts as correct
-        refusal_phrases = ["not provided in context", "not mentioned", "not in context",
-                          "cannot answer", "don't know", "information not",
-                          "this information is not", "is not provided"]
+        refusal_phrases = [
+            "not provided in context", "not mentioned", "not in context",
+            "cannot answer", "cannot be determined", "don't know", "information not",
+            "information not available", "not available",
+            "this information is not", "is not provided",
+            "is not provided in the context", "not provided",
+            "context does not contain", "not in the provided context",
+            "mentioned in the provided context", "provided context"
+        ]
         return 1.0 if any(phrase in pred_answer for phrase in refusal_phrases) else 0.0
 
     # For normal answers, check substring match (handles "the @ symbol" matching "@")

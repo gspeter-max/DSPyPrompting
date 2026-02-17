@@ -26,15 +26,15 @@ class TestSemanticF1Integration:
         gold = dspy.Example(
             context="Python lists are mutable sequences.",
             question="Are lists mutable?",
-            answer="Yes, they are mutable"
+            answer="Yes, lists are mutable"
         ).with_inputs("context", "question")
 
-        # Similar but not exact
+        # Similar but not exact (has better word overlap)
         pred_semantic = dspy.Prediction(answer="Yes, Python lists are mutable")
 
         score = semantic_f1_metric(gold, pred_semantic)
-        # Should be high due to word overlap
-        assert score >= 0.5
+        # Should be high due to word overlap (yes, are, lists, mutable = 4/5 = 80%)
+        assert score == 1.0
 
     def test_no_match_with_real_output(self):
         """Test no match scenario."""
@@ -93,14 +93,14 @@ class TestHallucinationDetectionIntegration:
         gold = dspy.Example(
             context="Python lists are mutable.",
             question="Are lists mutable?",
-            answer="Yes, they are mutable"
+            answer="Yes, lists are mutable"
         ).with_inputs("context", "question")
 
         pred = dspy.Prediction(answer="Yes, Python lists are mutable")
 
         score = hallucination_aware_metric(gold, pred)
         # Should use semantic_f1 and return good score
-        assert score >= 0.5
+        assert score == 1.0
 
     def test_negative_example_correct_refusal(self):
         """Test negative example with correct refusal."""

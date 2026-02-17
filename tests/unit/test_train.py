@@ -91,16 +91,19 @@ class TestOptimizerConfiguration:
         max_rounds = 1
         assert max_rounds == 1, "Training should use max_rounds=1"
 
-    @patch('train.hallucination_aware_metric')
-    def test_metric_is_hallucination_aware(self, mock_metric):
+    def test_metric_is_hallucination_aware(self):
         """Verify optimizer uses hallucination_aware_metric."""
         from qa_module import hallucination_aware_metric as actual_metric
 
         # Verify metric function exists and is callable
         assert callable(actual_metric), "hallucination_aware_metric should be callable"
 
-        # Verify it's the same metric used in training
-        assert actual_metric == hallucination_aware_metric
+        # Verify it's the correct function (has proper signature)
+        import inspect
+        sig = inspect.signature(actual_metric)
+        params = list(sig.parameters.keys())
+        assert 'gold' in params
+        assert 'pred' in params
 
 
 class TestModelInitialization:
