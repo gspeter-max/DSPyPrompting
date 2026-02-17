@@ -1,6 +1,7 @@
 """Comprehensive testing suite for DSPy QA system."""
 
 import os
+import time
 import dspy
 from dotenv import load_dotenv
 from qa_module import QAModule, semantic_f1_metric
@@ -13,6 +14,33 @@ load_dotenv()
 api_key = os.getenv("GROQ_API_KEY")
 llm = dspy.LM("groq/llama-3.1-8b-instant", api_key=api_key)
 dspy.configure(lm=llm)
+
+
+def call_with_retry(func, max_retries=3, delay=2):
+    """Call a function with retry on rate limit errors.
+
+    Args:
+        func: Function to call
+        max_retries: Maximum number of retry attempts
+        delay: Initial delay in seconds (doubles each retry)
+
+    Returns:
+        Result of the function call
+    """
+    for attempt in range(max_retries):
+        try:
+            return func()
+        except Exception as e:
+            if "rate limit" in str(e).lower() or "429" in str(e):
+                if attempt < max_retries - 1:
+                    wait_time = delay * (2 ** attempt)
+                    print(f"    ⏳ Rate limit hit, waiting {wait_time:.1f}s...")
+                    time.sleep(wait_time)
+                else:
+                    raise e
+            else:
+                raise e
+    return None
 
 
 def semantic_f1_threshold(gold, pred, trace=None, threshold=0.5):
@@ -47,7 +75,10 @@ def test_training_data_accuracy(trained_model):
     total = len(trainset)
 
     for i, sample in enumerate(trainset, 1):
-        pred = trained_model(context=sample.context, question=sample.question)
+        # Use retry logic for rate limit handling
+        pred = call_with_retry(
+            lambda: trained_model(context=sample.context, question=sample.question)
+        )
         is_correct = semantic_f1_threshold(sample, pred)
 
         status = "✅ PASS" if is_correct else "❌ FAIL"
@@ -99,7 +130,10 @@ You access values using their keys: my_dict['key']""",
     total = len(testset)
 
     for i, sample in enumerate(testset, 1):
-        pred = trained_model(context=sample.context, question=sample.question)
+        # Use retry logic for rate limit handling
+        pred = call_with_retry(
+            lambda: trained_model(context=sample.context, question=sample.question)
+        )
         is_correct = semantic_f1_threshold(sample, pred)
 
         status = "✅ PASS" if is_correct else "⚠️ SEMANTIC MATCH" if not is_correct and sample.answer.lower() in pred.answer.lower() else "❌ FAIL"
@@ -140,8 +174,12 @@ def test_untrained_vs_trained():
     untrained_correct = 0
 
     for sample in test_samples:
-        pred_untrained = untrained_qa(context=sample.context, question=sample.question)
-        pred_trained = trained_qa(context=sample.context, question=sample.question)
+        pred_untrained = call_with_retry(
+            lambda s=sample: untrained_qa(context=s.context, question=s.question)
+        )
+        pred_trained = call_with_retry(
+            lambda s=sample: trained_qa(context=s.context, question=s.question)
+        )
 
         untrained_ok = semantic_f1_threshold(sample, pred_untrained)
         trained_ok = semantic_f1_threshold(sample, pred_trained)
@@ -176,7 +214,9 @@ def test_context_adherence(trained_model):
         answer="Not mentioned in context"
     ).with_inputs("context", "question")
 
-    pred = trained_model(context=test_case.context, question=test_case.question)
+    pred = call_with_retry(
+        lambda: trained_model(context=test_case.context, question=test_case.question)
+    )
 
     print(f"  Context: {test_case.context}")
     print(f"  Question: {test_case.question}")
@@ -204,7 +244,9 @@ def test_edge_cases(trained_model):
 
     # Empty context
     try:
-        pred = trained_model(context="", question="What is Python?")
+        pred = call_with_retry(
+            lambda: trained_model(context="", question="What is Python?")
+        )
         print(f"  Empty context: {pred.answer[:50]}...")
         results.append("Empty context handled")
     except Exception as e:
@@ -213,9 +255,11 @@ def test_edge_cases(trained_model):
 
     # Multi-part question
     try:
-        pred = trained_model(
-            context="Python has lists and tuples. Lists are mutable, tuples are not.",
-            question="What are lists and are they mutable?"
+        pred = call_with_retry(
+            lambda: trained_model(
+                context="Python has lists and tuples. Lists are mutable, tuples are not.",
+                question="What are lists and are they mutable?"
+            )
         )
         print(f"  Multi-part question: {pred.answer[:50]}...")
         results.append("Multi-part handled")
