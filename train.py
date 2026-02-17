@@ -3,7 +3,7 @@
 import os
 import dspy
 from dotenv import load_dotenv
-from qa_module import QAModule, semantic_f1_metric
+from qa_module import QAModule, hallucination_aware_metric
 from dataset import trainset
 
 # Load environment variables
@@ -26,6 +26,10 @@ print("           DSPy QA Training - BootstrapFewShot")
 print("═══════════════════════════════════════════════════════════════")
 print(f"Model: llama-3.1-8b-instant")
 print(f"Training samples: {len(trainset)}")
+positive_count = sum(1 for s in trainset if "not provided" not in s.answer)
+negative_count = sum(1 for s in trainset if "not provided" in s.answer)
+print(f"  Positive: {positive_count}")
+print(f"  Negative: {negative_count}")
 print()
 
 # Initialize untrained QA module
@@ -33,8 +37,8 @@ qa_module = QAModule()
 
 # Configure BootstrapFewShot optimizer
 optimizer = dspy.BootstrapFewShot(
-    metric=semantic_f1_metric,
-    max_labeled_demos=4,
+    metric=hallucination_aware_metric,
+    max_labeled_demos=6,
     max_bootstrapped_demos=4,
     max_rounds=1,
     max_errors=10
