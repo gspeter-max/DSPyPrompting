@@ -1,0 +1,75 @@
+{
+  "generate_answer.predict": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "augmented": true,
+        "context": "Python's dataclasses module provides a decorator and functions for automatically adding generated special methods to user-defined classes. The @dataclass decorator automatically generates __init__, __repr__, and __eq__ methods based on the class attributes with type annotations. For more control over individual fields, you can use the field() function which accepts parameters like default (for default values), default_factory (for callable defaults), init (include in __init__), repr (include in string representation), compare (use in comparisons), and kw_only (keyword-only argument). The field() function is particularly useful for mutable default values like lists or dictionaries, where you should use default_factory=list instead of default=[] to avoid shared state between instances.",
+        "question": "How do you handle mutable default values in Python dataclasses without causing shared state between instances?",
+        "reasoning": "Mutating default values in dataclass attributes can cause shared state between instances because they are only created once when the class is initialized, rather than being recreated every time a new instance is created.",
+        "answer": "You should use the default_factory parameter when defining the field, which allows you to specify a callable that will be used to create a new object every time it's referenced, rather than a default object that's shared between instances. For example, `default_factory=list` would create a new empty list for each instance, rather than sharing the same list between instances."
+      },
+      {
+        "augmented": true,
+        "context": "Python 3.9 and later support using await expressions directly in list, set, and dictionary comprehensions. This feature allows you to asynchronously iterate over iterables and build data structures in a concise syntax. When using await in comprehensions, you must be within an async function or async context. The await expression can be used in the comprehension's iterable part (before 'for') or in the expression part (after 'for'). However, each await operation is sequential within the comprehension, meaning if you need to await multiple independent operations concurrently, you should use asyncio.gather() or asyncio.TaskGroup() instead for better performance. The syntax works like: result = [await fetch_item(id) for id in item_ids] where fetch_item is an async function.",
+        "question": "What should you use instead of await in comprehensions when you need to execute multiple independent async operations concurrently?",
+        "reasoning": "The reason for using asyncio.gather() or asyncio.TaskGroup() instead of await in comprehensions when performing concurrent operations is that await in comprehensions executes operations sequentially. This contrasts with asyncio.gather() and asyncio.TaskGroup(), which are designed to handle multiple tasks concurrently, potentially leading to improved performance.",
+        "answer": "You should use asyncio.gather() or asyncio.TaskGroup() instead of await in comprehensions when you need to execute multiple independent async operations concurrently."
+      },
+      {
+        "augmented": true,
+        "context": "The contextlib module provides the @contextmanager decorator which simplifies creating context managers from generator functions. When you use this decorator, the code before the yield statement serves as the __enter__ method (setup phase), and the code after yield serves as the __exit__ method (teardown phase). The value yielded becomes what's assigned to the variable in the with statement. A key advantage of @contextmanager is that the finally clause in the generator ensures cleanup code always runs, even if an exception occurs in the with block. You can also catch exceptions by wrapping the yield in a try-except block, though you need to decide whether to suppress the exception or re-raise it after cleanup. This approach is more concise than creating a class with __enter__ and __exit__ methods for simple resource management scenarios.",
+        "question": "How does the @contextmanager decorator ensure cleanup code always runs, even when exceptions occur?",
+        "reasoning": "The reason the @contextmanager decorator ensures cleanup code runs, even when exceptions occur, is due to the finally clause in the generator. The finally block is executed after the yield statement, regardless of whether an exception occurs within the generator or outside of it. This ensures that cleanup operations are always performed before exiting the with block.",
+        "answer": "The finally clause in the generator serves as the teardown phase, ensuring cleanup code is always executed when the context manager exits, either normally or due to an exception."
+      },
+      {
+        "augmented": true,
+        "context": "Type annotations for generators use the Generator[YieldType, SendType, ReturnType] type from the typing module. The first type parameter (YieldType) indicates what the generator yields, the second (SendType) indicates what type of values it can receive via send(), and the third (ReturnType) indicates the return value when the generator finishes. For generators that only yield values and never receive anything or return a specific value, you can use Generator[YieldType, None, None]. Python's type checkers use these annotations to ensure you're using generators correctly, such as preventing you from sending values of the wrong type or expecting return values from generators that don't have them. Starting with Python 3.9, you can also use collections.abc.Generator as a generic type, though the typing module version provides more explicit documentation of all three type parameters.",
+        "question": "What are the three type parameters in Generator[YieldType, SendType, ReturnType] used for?",
+        "reasoning": "The three type parameters in Generator[YieldType, SendType, ReturnType] are used to specify the type information for a generator. The YieldType parameter indicates what the generator yields, the SendType parameter indicates what type of values the generator can receive through the send() method, and the ReturnType parameter indicates the return value when the generator finishes.",
+        "answer": "The YieldType parameter indicates what the generator yields, the SendType parameter indicates what type of values it can receive via send(), and the ReturnType parameter indicates the return value when the generator finishes."
+      },
+      {
+        "context": "Python's threading module allows you to run multiple threads concurrently. Each thread shares the same memory space and can access the same objects. You need to use locks or other synchronization primitives when multiple threads access shared mutable state to prevent race conditions.",
+        "question": "What is the Global Interpreter Lock (GIL) and how does it affect multi-threaded Python programs?",
+        "answer": "This information is not provided in the context"
+      },
+      {
+        "context": "Python 3 introduced async and await keywords for writing asynchronous code. Async functions are defined using async def and return coroutine objects. The await keyword is used to call other async functions and wait for their results.",
+        "question": "What is the difference between coroutines and generators in Python's implementation?",
+        "answer": "This information is not provided in the context"
+      }
+    ],
+    "signature": {
+      "instructions": "Answer questions with STRICT adherence to the provided context.\n\nCRITICAL RULES - NO EXCEPTIONS:\n1. You MAY ONLY answer if the EXACT answer is explicitly in the context\n2. If the context only MENTIONS the topic but doesn't ANSWER the question, say: \"This information is not provided in the context.\"\n3. If ANY part of the answer requires outside knowledge, say: \"This information is not provided in the context.\"\n4. Even if you KNOW the answer from training, if it's not in the context, say: \"This information is not provided in the context.\"\n\nExamples of CORRECT refusals:\n- Context: \"Python lists are mutable\" → Question: \"Are tuples mutable?\" → Answer: \"This information is not provided in the context.\"\n- Context: \"async def creates coroutines\" → Question: \"How do coroutines work internally?\" → Answer: \"This information is not provided in the context.\"\n- Context: \"Descriptors implement __get__\" → Question: \"What about multiple descriptors?\" → Answer: \"This information is not provided in the context.\"",
+      "fields": [
+        {
+          "prefix": "Context:",
+          "description": "Documentation or explanation. This is the ONLY source of information allowed."
+        },
+        {
+          "prefix": "Question:",
+          "description": "Question about the context"
+        },
+        {
+          "prefix": "Reasoning: Let's think step by step in order to",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Answer:",
+          "description": "Answer based ONLY on context, or 'This information is not provided in the context.' if answer is not explicitly in context"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.14",
+      "dspy": "3.1.3",
+      "cloudpickle": "3.1"
+    }
+  }
+}

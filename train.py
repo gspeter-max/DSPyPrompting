@@ -15,9 +15,9 @@ api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
     raise ValueError("GEMINI_API_KEY not found in environment variables")
 
-# Configure DSPy with Gemini 1.5 Flash (DSPy 3.x format)
+# Configure DSPy with Gemini 2.5 Flash (DSPy 3.x format)
 llm = dspy.LM(
-    "google/gemini-flash-1.5",
+    "gemini/gemini-2.5-flash",
     api_key=api_key
 )
 dspy.configure(lm=llm)
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         auto_mode = args.auto or "light"
         print(f"           Auto Mode: {auto_mode}")
     print("═══════════════════════════════════════════════════════════════")
-    print(f"Model: gemini-flash-1.5")
+    print(f"Model: gemini-2.5-flash")
     print(f"Training samples: {len(trainset)}")
     positive_count = sum(1 for s in trainset if "not provided" not in s.answer)
     negative_count = sum(1 for s in trainset if "not provided" in s.answer)
