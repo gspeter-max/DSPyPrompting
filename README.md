@@ -33,20 +33,78 @@ GROQ_API_KEY=your_api_key_here
 
 ### 3. Train the Model
 
+**Option A: Quick training (BootstrapFewShot - default)**
 ```bash
 python train.py
 ```
 
+**Option B: Best quality (MIPROv2)**
+```bash
+python train.py --optimizer miprov2 --auto medium
+```
+
 **Expected output:**
 - Training samples: 15
-- Demonstrations selected: 6
-- Model saved to: trained_qa_model.json
+- Demonstrations selected: 4-6
+- Model saved to: `trained_qa_model_bootstrap.json` or `trained_qa_model_miprov2.json`
 
 ### 4. Test the Model
 
 ```bash
 python test.py
 ```
+
+## 🔄 Optimizer Selection
+
+DSPyPrompting supports two optimizers with different trade-offs:
+
+### BootstrapFewShot (Default)
+
+**Best for:** Quick iteration, baseline models, development
+
+**Method:** Optimizes few-shot examples only
+
+**Speed:** Fast (~2-3 minutes)
+
+**Usage:**
+```bash
+python train.py                    # Uses BootstrapFewShot (default)
+python train.py --optimizer bootstrap  # Explicit BootstrapFewShot
+```
+
+### MIPROv2
+
+**Best for:** Production models, maximum accuracy, refined prompts
+
+**Method:** Optimizes both instructions (system prompts) AND few-shot examples
+
+**Speed:** Slower (~5-15 minutes depending on auto mode)
+
+**Usage:**
+```bash
+# Light mode (fastest MIPROv2)
+python train.py --optimizer miprov2
+
+# Medium mode (balanced)
+python train.py --optimizer miprov2 --auto medium
+
+# Heavy mode (best quality)
+python train.py --optimizer miprov2 --auto heavy
+
+# With threading (faster on multi-core)
+python train.py --optimizer miprov2 --num-threads 8
+```
+
+### Comparison
+
+| Feature | BootstrapFewShot | MIPROv2 |
+|---------|------------------|---------|
+| Optimizes Examples | ✅ | ✅ |
+| Optimizes Instructions | ❌ | ✅ |
+| Training Speed | Fast | Medium-Slow |
+| Model Quality | Good | Better |
+| API Calls | Fewer | More |
+| Parallel Processing | ❌ | ✅ (via num_threads) |
 
 ## 📁 Project Structure
 
